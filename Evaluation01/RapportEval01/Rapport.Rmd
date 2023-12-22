@@ -1,0 +1,220 @@
+---
+title: "Evaluation 1 - Rapport"
+subtitle: "Technologie de l'e-commerce et mobiles - Big Data"
+author: "Khalladi Mohamed - B32-DA"
+date: "`r Sys.Date()`"
+output:
+   pdf_document:
+      fig_caption: true
+      number_sections: true
+---
+
+\newpage 
+\tableofcontents
+\newpage
+
+# ANOVA 1
+
+## Les civilisations précolombiennes
+
+>Le Ministère de la Culture de Batracie a étudié le nombre de récipients contenant de la
+bière fermentée sur divers sites archéologiques correspondants chacun à l'un des 4 types de
+civilisations précolombiennes suivantes: Cuacuacomeqiqi, Oxomatl, Tlaloc et Tenochtitlan.
+
+**Observe-ton des différences significatives entre les quatre traitements et quels sont ceux qui sont, s'ils existent, à résultats similaires ?**
+
+```{r}
+setwd("C:\\Users\\amine\\OneDrive\\Bureau\\EcomStat\\Labo\\datasets")
+
+civilisation <- read.table("civilisation.csv", header=TRUE, sep=";", dec=".")
+
+summary(civilisation)
+
+boxplot(civilisation$nbrRecipient~civilisation$civilisation)
+```
+Avec notre boxplot, on peut remarquer que les variances sont assez différentes, mais il y a un rapprochement entre le groupe Oxomatl et Tenochtitlan. Nous allons donc effectuer différents tests pour vérifier de manière objective si le traitement a une influence sur le nombre de récipients.
+```{r}
+model<-lm(civilisation$nbrRecipient~civilisation$civilisation)
+model
+```
+Ici on a donc créer notre modéle linéaire, qui nous donne donc l’intercept qui est l’estimation de mu du premier groupe et la différence (ecart à la moyenne) des autres par rapport au premier intercept.  
+Maintenant on peut comparer les moyennes entres-elles et vérifier si le traitement a bien une influence.  
+H0 : mu1 = mu2 = mu3 . . .  
+H1 : Au moins une différence.
+```{r}
+anova(model)
+```
+Le test de l’anova nous renvoie une p-value miniscule (7.991e-07), on peut donc rejeter l’hypothése H0, et dire
+que la différence est bien significative.
+```{r}
+summary(model)
+```
+Le summary du modéle linéaire repond a cette question grâce au test de fisher (p-value)
+On peut donc rejeter H0 , La différence est bien significative entre les populations.  
+On utilise un test de conformité de moyenne.  
+H0 : mu1 = 0 si la p-value est trop petite on rejette le H0 et on peut faire confiance a la valeur de mu1 donner par l'intercept.
+Après on unitilise un test d'homogénéité de moyenne :  
+H0 : sigma2 = 0 ou mu1 = mu2  
+  
+Considérons maintenant que les variances soient inégales :
+```{r}
+oneway.test(civilisation$nbrRecipient~civilisation$civilisation, var.equal=FALSE)
+```
+Ici le oneway.test va passer par welch, et on obtient une p-value miniscule, cela nous raméne a conclure qu’il
+y’a bien une différence significative.  
+On peut également aller voir de plus prés en comparant par paire, pour vérifier quels populations varient
+fortement.
+```{r}
+pairwise.t.test(civilisation$nbrRecipient, civilisation$civilisation,   
+p.adjust.method ="none", pool.sd=TRUE)
+```
+Le test pairwise.t.test effectue un test d'homogénéité des moyennes pour chaque paire de groupes  
+On peut remarquer qu'avec un seuil de tolérance de 5 %, il y a une grande similarité entre les groupes Oxomatl et Tenochtitlan, ce qui confirme notre conclusion basée sur l'observation du boxplot.  
+    
+
+# Régression et corrélation multiple  
+
+## Les accidents sur les routes du Minnesota  
+  
+>Le fichier accidents2.csv contient des données sur le taux d'accidents de voiture sur
+les autoroutes du Minnesota (1973). Ces données, collectées sur 39 grands segments
+d'autoroute, ont évidemment été collectées pour essayer de déterminer les raisons de ces
+accidents.  
+
+**On demande d'étudier l'éventuelle relation entre ce taux d'accidents et nombre de signaux routiers par mile associé à la largeur de la bande d'urgence latérale. Dans un second temps, on demande d'ajouter comme 3ème variable explicative le nombre d'entrées par mile d'autoroute.**
+```{r}
+setwd("C:\\Users\\amine\\OneDrive\\Bureau\\EcomStat\\Labo\\datasets")
+
+accidents <- read.table("accidents2.csv", h=TRUE, sep=";", dec=",", row.names=1)
+accidents
+summary(accidents)
+```
+
+```{r}
+# Tracer le nuage de points entre rate et sigs1
+plot(accidents$sigs1, accidents$rate, xlab = "Nombre de signaux routiers par mile",   
+ylab = "Taux d'accidents",  
+main ="Relation entre le taux d'accidents et le nombre de S.R")
+
+# Tracer le nuage de points entre rate et shld
+plot(accidents$shld, accidents$rate, xlab = "Largeur de la bande d'urgence latérale",   
+ylab = "Taux d'accidents",  
+main = "Relation entre le taux d'accidents et la largeur de la B.U.L")
+```
+
+```{r}
+# Créer le modèle de régression multiple
+modele1 <- lm(rate ~ sigs1 + shld, data = accidents)
+modele1
+```
+On obtient donc l’hyperplan d’ajustement suivant :  
+rate = 4.497  + 1.685\*sigs1 - 0.207\*shld -> y = 4.497 + 1.685\*x1 – 0.207\*x2
+```{r}
+# Afficher un résumé du modèle
+summary(modele1)
+sqrt(0.4329)
+```
+Avec un seuil de tolérance fixé à 0.05, on peut donc en conclure :  
+- Rejet de H0 pour Beta 0  
+- Rejet de H0 pour Beta 1  
+- Rejet de H0 pour Beta 2  
+On obtient un r-squared de 0.4627 mais pour une régression multiple, il est préférable d’utiliser le
+Adjusted R-squared car le R-Squared ne va cesser d’augmenter en ajoutant plus de régresseurs au
+modèle.  
+On obtient 0.657 qui est un taux correct donc on va considérer que les 2
+variables ici présentes exercent une influence sur le taux d’accidents.  
+Enfin, nous comparons le modèle simple et complet pour vérifier à nouveau si nos régresseurs sont fiables ou non.  
+H0 : y = beta0 + epsilon   
+H0 : beta1 = 0 et beta2 = 0  
+Nous obtenons une p-value très faible (1.391e-05), ce qui suggère que nos régresseurs jouent un rôle significatif dans notre modèle.
+
+```{r}
+# Calcul des résidus standardisés
+residus.studentises <- rstudent(modele1)
+
+# Tracer le graphique des résidus standardisés
+plot(residus.studentises, ylim = c(-3, 3),   
+xlab = "Observations",   
+ylab = "Résidus standardisés",   
+main = "Graphique des résidus standardisés")
+
+# Tracer les lignes horizontales à -2, 0 et 2
+abline(h = c(-2, 0, 2), lty = c(2, 1, 2))
+```
+L'étude des résidus montre que la corrélation est faible. Les points ne sont pas suffisamment dispersés. Certaines valeur se trouvent en dehors de l’intervalle et il y a plus de points négatifs que de points positifs.  
+
+## Ajout de la variable : nombre d'entrées par mile d'autoroute  
+  
+Testons avec le nombre d’entrée par mile d’autoroute en plus :
+```{r}
+# Tracer le nuage de points entre rate et acpt
+plot(accidents$acpt, accidents$rate,   
+xlab = "Nombre d'entrées par mile",   
+ylab = "Taux d'accidents",   
+main = "Relation entre le taux d'accidents et le N.E.M")
+
+# Créer le modèle de régression multiple
+modele2 <- lm(rate ~ sigs1 + shld + acpt, data = accidents)
+modele2
+```
+Voici l’hyperplan d’ajustement formé :  
+y = 2.583 + 0.926\*x1 - 0.077\*x2 + 0.116\*x3  
+Analysons maintenant le summary :
+```{r}
+# Afficher un résumé du modèle
+summary(modele2)
+sqrt(0.609)
+```
+Avec un seuil de tolérance fixé à 0.05, on peut donc en conclure :  
+Rejet de H0 pour Beta 0  
+Rejet de H0 pour Beta 1  
+Acceptation de H0 pour Beta 2 (Beta 2 = 0). Donc perte de l’influence de la largeur de la bande d’urgence latérale.  
+Rejet de H0 pour Beta 3  
+On obtient un r-squared de 0.6407 mais pour une régression multiple, il est préférable d’utiliser le
+Adjusted R-squared car le R-Squared ne va cesser d’augmenter en ajoutant plus de régresseurs au
+modèle.  
+On obtient 0.780 qui est un taux élevé et vu la p-value 6.502e-08 qui est très faible, on peut rejeter H0 et on peut dire qu’il y a une haute corrélation mais elle peut mener à des erreurs vue que la p-value « shld » est trop élevée et donc pas fiable.  
+  
+Enfin, nous comparons le modèle simple et complet pour vérifier à nouveau si nos régresseurs sont fiables ou
+non.  
+H0 : y = beta0 + epsilon  
+H0 : beta1 = 0, beta2 = 0 et beta3 = 0  
+Nous obtenons une p-value très faible (6.502e-08), ce qui suggère que nos régresseurs jouent un rôle significatif dans notre modèle.
+```{r}
+# Calcul des résidus standardisés
+residus.studentises <- rstudent(modele2)
+
+# Tracer le graphique des résidus standardisés
+plot(residus.studentises,   
+ylim = c(-3, 3),   
+xlab = "Observations",   
+ylab = "Résidus standardisés",   
+main = "Graphique des résidus standardisés")
+
+# Tracer les lignes horizontales à -2, 0 et 2
+abline(h = c(-2, 0, 2), lty = c(2, 1, 2))
+```
+L’etude des résidus nous montre que la corrélation n’est pas hyper bonne, les points ne sont pas assez
+dispersés et certaines valeur se trouvent en dehors de l’intervalle, cela nous confirme qu’il existe un meilleur modéle.  
+  
+## Complément : La distance de Cook
+
+```{r}
+cooks.distance(modele2)
+
+plot(cooks.distance(modele2))
+```
+La distance de Cook pour chacun des points du nuage est la distance entre les
+paramètres estimés par la régression avec et sans ce point.  
+  
+Avec notre modèle, on observe qu'à l'indice 25, on a une valeur supérieure à 1, ce qui pourrait biaiser notre estimation des coefficients de régression (point aberrant).  
+  
+## Complément : Le critère AIC  
+
+```{r}
+step(modele2)
+```
+est un critère de comparaison de modèles:  
+pour un sous-modèle donné, il propose une estimation de la perte d'information lorsqu'on utilise ce modèle pour (prédire) les données.  
+  
+Avec notre modèle, on observe que si on enlève la variable "shld", on aura le moins d'information perdue (AIC = 19.781). Donc, R nous propose un modèle simplifié qui peut décrire les données avec le plus petit nombre de paramètres possible.
