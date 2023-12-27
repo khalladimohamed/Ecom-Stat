@@ -23,6 +23,7 @@ summary(modele_hierarchise)
 
 
 
+
 #Les médicaments contre la GCE
 dataMedicament <- data.frame(
   Amelioration = c(10, 12, 8, 10, 6, 13, 9, 10, 9, 8, 11, 18, 12, 15, 13, 8, 15, 16, 9, 13, 
