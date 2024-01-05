@@ -15,6 +15,8 @@ setwd("C:\\Users\\amine\\OneDrive\\Bureau\\EcomStat\\Labo\\Evaluation02\\dataset
 #Eaux minérales
 donnees <- read.table("Eaux1.txt", sep="\t", header=TRUE, row.names=7)
 
+summary(donnees)
+
 resultat_acp <- PCA(donnees)
 
 resultat_acp$eig

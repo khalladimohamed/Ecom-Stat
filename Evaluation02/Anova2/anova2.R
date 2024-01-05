@@ -5,9 +5,13 @@ setwd("C:\\Users\\amine\\OneDrive\\Bureau\\EcomStat\\Labo\\Evaluation02\\dataset
 #Bière et petits maux
 dataBiere <- read.csv("bieres_petits_maux.csv", h=TRUE, sep=";", fileEncoding="latin1")
 dataBiere
+dataBiere$maux <- as.factor(dataBiere$maux)
+dataBiere$biere <- as.factor(dataBiere$biere)
+summary(dataBiere)
 
 
 with(dataBiere, interaction.plot(maux, biere, CBio007.69))
+with(dataBiere, interaction.plot(biere, maux, CBio007.69))
 
 
 modele_croise = lm(CBio007.69 ~ maux * biere, data = dataBiere)
@@ -33,9 +37,13 @@ dataMedicament <- data.frame(
   Administration = rep(c("Oral", "Injection"), each = 10, times = 3)
 )
 dataMedicament
+dataMedicament$Molecule <- as.factor(dataMedicament$Molecule)
+dataMedicament$Administration <- as.factor(dataMedicament$Administration)
+summary(dataMedicament)
 
 
 with(dataMedicament, interaction.plot(Molecule, Administration, Amelioration))
+with(dataMedicament, interaction.plot(Administration, Molecule, Amelioration))
 
 
 modele_croise <- lm(Amelioration ~ Molecule * Administration, data = dataMedicament)

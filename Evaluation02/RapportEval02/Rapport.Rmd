@@ -1,0 +1,348 @@
+---
+title: "Evaluation 2 - Rapport"
+subtitle: "Technologie de l'e-commerce et mobiles - Big Data"
+author: "Khalladi Mohamed - B32-DA"
+date: "`r Sys.Date()`"
+output:
+   pdf_document:
+      fig_caption: true
+      number_sections: true
+---
+
+\newpage 
+\tableofcontents
+\newpage
+
+# ANOVA 2
+
+## Bière et petits maux  
+
+>L'Administration de la Santé Publique de Bidendumie a recensé le nombre de patients 
+atteints de l'une des 4 maladies bénignes les plus fréquentes et ayant consommé l'une des 3
+bières locales les plus répandues. Elle a mesuré un coefficient biochimique représentatif sur
+6 patients (si possible) choisis aléatoirement.  
+  
+**Est-il possible d'interpréter de tels résultats ?**  
+  
+Nous allons former notre data-set et vérifier qu’il soit bien formé.
+```{r}
+setwd("C:\\Users\\amine\\OneDrive\\Bureau\\EcomStat\\Labo\\Evaluation02\\datasets")
+
+dataBiere <- read.csv("bieres_petits_maux.csv", h=TRUE, sep=";", fileEncoding="latin1")
+dataBiere
+dataBiere$maux <- as.factor(dataBiere$maux)
+dataBiere$biere <- as.factor(dataBiere$biere)
+summary(dataBiere)
+```
+
+```{r}
+#Ce graphique montre comment le coefficient biochimique "CBio007-69" varie avec 
+#le type de maladie ("maux") pour chaque type de bière. 
+with(dataBiere, interaction.plot(maux, biere, CBio007.69))
+```
+Chaque ligne du graphique représente un niveau du facteur "biere", et les points sur les lignes représentent les moyennes du coefficient biochimique pour chaque combinaison de "biere" et "maux".  
+La non-parallélité des lignes suggère une interaction entre les types de bières et les maux en termes de coefficient biochimique.
+```{r}
+#Ce graphique montre comment le coefficient biochimique varie avec 
+#le type de bière pour chaque type de maladie.
+with(dataBiere, interaction.plot(biere, maux, CBio007.69))
+```
+Chaque ligne du graphique représente un niveau du facteur "maux", et les points sur les lignes représentent les moyennes du coefficient biochimique pour chaque combinaison de "biere" et "maux".  
+Les lignes qui ne sont pas parallèles indiquent également une interaction entre le type de bière et le type de mal.  
+  
+On va créer le modèle croisé pour pouvoir appliquer l’anova.  
+```{r}
+#y(ijk) = mu + alpha + beta(i) + gamma(j) + epsilon(ijk)
+
+##Modèle avec interaction
+modele_croise = lm(CBio007.69 ~ maux * biere, data = dataBiere)
+modele_croise
+```
+(Mu): Le terme (Intercept) qui est de 29.33, représente la moyenne estimée du coefficient biochimique pour la catégorie de référence des maux et des bières (alpha1 = 0 et beta1 = 0).  
+  
+
+(Alpha): Les coefficients liés à "maux" (par exemple, mauxsinusite de -16.00) représentent l'effet de chaque maladie sur le coefficient biochimique par rapport à la maladie de référence.  
+  
+
+(Beta): Les coefficients liés à "biere" (par exemple, biereLe nectar royal de -9.50) indiquent l'effet de chaque type de bière sur le coefficient biochimique par rapport à la bière de référence.  
+  
+
+(Gamma): Les coefficients d'interaction (par exemple, mauxmal de tête:biereLa vaisselle de 7.00) montrent l'effet combiné d'un certain mal avec une certaine bière sur le coefficient biochimique. 
+  
+
+En d'autres termes, l'Intercept est notre point de départ, les coefficients alpha et beta nous disent comment chaque facteur change ce point de départ individuellement, et les coefficients gamma nous montrent ce qui se passe quand ces facteurs interagissent et se combinent de manière unique.  
+  
+  
+
+**Effets principaux du facteur "maux":**  
+H0: Il n'y a pas de différence dans les moyennes du coefficient biochimique entre les différents types de "maux".  
+H1: Il existe au moins une différence dans les moyennes du coefficient biochimique entre les différents types de "maux".  
+  
+ 
+**Effets principaux du facteur "biere":** 
+H0: Il n'y a pas de différence dans les moyennes du coefficient biochimique entre les différentes bières.  
+H1: Il existe au moins une différence dans les moyennes du coefficient biochimique entre les différentes bières.  
+  
+  
+**Interaction entre "maux" et "biere":**  
+H0: Il n'y a pas d'interaction entre les "maux" et les "bières", c'est-à-dire que l'effet d'un "mal" sur le coefficient biochimique est le même pour toutes les "bières".  
+H1: Il existe une interaction entre les "maux" et les "bières", c'est-à-dire que l'effet d'un "mal" sur le coefficient biochimique change selon la "bière" consommée.
+```{r}
+anova(modele_croise)
+```
+**Pour les effets principaux du facteur "maux":** 
+Pour un seuil de 1% ou 5% on rejette H0, donc :  
+H1: Il existe au moins une différence dans les moyennes du coefficient biochimique entre les différents types de "maux".  
+  
+
+**Pour les effets principaux du facteur "biere":**  
+Pour un seuil de 1% ou 5% on garde H0, donc :   
+H0: Il n'y a pas de différence dans les moyennes du coefficient biochimique entre les différentes bières.    
+  
+  
+**Pour l'interaction entre "maux" et "biere":**  
+Pour un seuil de 1% on garde H0 mais pour 5% on rejette H0, donc :  
+H1: Il existe une interaction entre les "maux" et les "bières", c'est-à-dire que l'effet d'un "mal" sur le coefficient biochimique change selon la "bière" consommée.
+```{r}
+summary(modele_croise)
+```
+rapport de corrélation = pourcentage de la variance expliquée par le modèle (donc toutes les contributions sauf la variance résiduelle)  
+R squared : proportion de la SCEf par rapport à la SCEt 
+    
+      
+La p-value nous indique ici qu’il pourrait y avoir une influence avec la sinusite et le coefficient
+biochimique vue que la p-value est très faible. Les autres en prenant un seuil de 5% n’auraient pas
+d’influence.   
+
+Pourtant, la p-value du modele est très faible également donc ça veut dire qu’il y a de l’interaction mais il faut en
+trouver plus. C’est pour cela que l’on va chercher à utiliser le modèle hiérarchisé pour rechercher
+d’autres interactions.
+```{r}
+#y(ijk) = mu + alpha + beta(i) + gamma(j) + epsilon(ijk)
+#Modèle sans interaction
+modele_hierarchise = lm(CBio007.69 ~ maux + biere, data = dataBiere)
+modele_hierarchise
+```
+
+```{r}
+anova(modele_hierarchise)
+```
+Ici, on voit que la bière a une p-value supérieure à 7% , ce qui vaut dire qu’on pourrait accepter le H0
+avec un seuil de 5% , donc que la bière n’aurait pas d’influence sur le coefficient biochimique.
+```{r}
+summary(modele_hierarchise)
+```
+Grace à ce modele hierarchise, on voit que les sinusites ont toujours de l’influence mais que
+les nausées ont également une influence sur le coefficient biochimique ainsi que la bière « Le nectar
+Royal » (pour un seuil de 5%).
+    
+      
+## Les médicaments contre la GCE  
+  
+>Une entreprise pharmaceutique s'intéresse à une maladie tropicale (la Gengivite
+Cephalopodique Endiablée - GCE) et a mis au point trois molécules susceptibles de soigner
+cette maladie : AlphaVictoire, BetaTriomphe et GammaSucces. Les tests cliniques ont été
+pratiqués pour mesurer un coefficient relatif d'amélioration de l'état de patients gravement
+atteints (plus ce coefficient d'immunité est élevé et plus l'action sera considérée comme
+efficace). Mais, de plus, on souhaite également tenir compte du mode d'administration des
+différentes molécules (par voie orale ou par injection intraveineuse). 
+
+**Observe-t-on une différence significative d'efficacité soit selon la molécule, soit selon le mode d'administration ou encore selon une combinaison des deux facteurs ?**  
+  
+Nous allons former notre data-set et vérifier qu’il soit bien formé.
+```{r}
+#Les médicaments contre la GCE
+setwd("C:\\Users\\amine\\OneDrive\\Bureau\\EcomStat\\Labo\\Evaluation02\\datasets")
+
+dataMedicament <- data.frame(
+  Amelioration = c(10, 12, 8, 10, 6, 13, 9, 10, 9, 8, 11, 18, 12, 15, 13, 8, 15, 16, 9, 13, 
+                  7, 14, 10, 11, 9, 10, 11, 7, 9, 9, 8, 9, 10, 9, 11, 13, 7, 14, 15, 12,
+                  12, 9, 11, 27, 7, 8, 13, 14, 10, 11, 7, 6, 10, 7, 7, 5, 6, 7, 9, 6),
+  Molecule = rep(c("AlphaVictoire", "BetaTriomphe", "GammaSucces"), each = 20),
+  Administration = rep(c("Oral", "Injection"), each = 10, times = 3)
+)
+dataMedicament
+dataMedicament$Molecule <- as.factor(dataMedicament$Molecule)
+dataMedicament$Administration <- as.factor(dataMedicament$Administration)
+summary(dataMedicament)
+```
+
+```{r}
+#Ce graphique montre comment le coefficient d'immunité varie avec 
+#le type de molecule pour chaque type d'administration.
+with(dataMedicament, interaction.plot(Molecule, Administration, Amelioration))
+```
+Chaque ligne du graphique représente un niveau du facteur "Administration", et les points sur les lignes représentent les moyennes du coefficient d'immunité pour chaque combinaison de "Administration" et "Molecule".    
+La croisement des lignes suggère une interaction entre les types des administrations et les molecules en termes de coefficient d'immunité.
+```{r}
+#Ce graphique montre comment le coefficient d'immunité varie avec 
+#le type d'administration pour chaque type de molecule.
+with(dataMedicament, interaction.plot(Administration, Molecule, Amelioration))
+```
+Chaque ligne du graphique représente un niveau du facteur "Molecule", et les points sur les lignes représentent les moyennes du coefficient d'immunité pour chaque combinaison de "Molecule" et "Administration".    
+Les lignes qui se croisent indiquent également une interaction entre le type de molecule et le type d'administration.
+```{r}
+modele_croise <- lm(Amelioration ~ Molecule * Administration, data = dataMedicament)
+modele_croise
+```
+**Effets principaux du facteur "Molecule":**  
+H0: Il n'y a pas de différence dans les moyennes du coefficient d'immunité entre les différents types de "Molecule".  
+H1: Il existe au moins une différence dans les moyennes du coefficient d'immunité entre les différents types de "Molecule".  
+  
+ 
+**Effets principaux du facteur "Administration":** 
+H0: Il n'y a pas de différence dans les moyennes du coefficient d'immunité entre les différentes types d'administrations.  
+H1: Il existe au moins une différence dans les moyennes du coefficient d'immunité entre les différentes types d'administrations.  
+  
+  
+**Interaction entre "Molecule" et "Administration":**  
+H0: Il n'y a pas d'interaction entre les "Molecule" et les "Administration", c'est-à-dire que l'effet d'un "Molecule" sur le coefficient d'immunité est le même pour toutes les "Administration".  
+H1: Il existe une interaction entre les "Molecule" et les "Administration", c'est-à-dire que l'effet d'un "Molecule" sur le coefficient d'immunité change selon l' "Administration".
+```{r}
+anova(modele_croise)
+```
+**Pour les effets principaux du facteur "Molecule":**  
+Pour un seuil de 1% ou 5% on garde H0, donc :  
+H0: Il n'y a pas de différence dans les moyennes du coefficient d'immunité entre les différents types de "Molecule".  
+  
+**Pour les effets principaux du facteur "Administration":**   
+Pour un seuil de 1% ou 5% on garde H0, donc :   
+H0: Il n'y a pas de différence dans les moyennes du coefficient d'immunité entre les différentes types d'administrations.  
+  
+**Pour l'interaction entre "Molecule" et "Administration":**  
+Pour un seuil de 1% on garde H0 mais pour 5% on rejette H0, donc :  
+H1: Il existe une interaction entre les "Molecule" et les "Administration", c'est-à-dire que l'effet d'un "Molecule" sur le coefficient d'immunité change selon l' "Administration".
+```{r}
+summary(modele_croise)
+```
+Les p-values nous indiquent ici que les molecules BetaTriomphe et GammaSucces on de l'influence sur le coefficient d'immunité, et du côté des types des administrations "Oral" a bien un influence sur le coefficient d'immunité.  
+  
+Cependant, on va quand même analyser l’anova pour chacune des variables qualitatives séparément
+pour essayer de voir si il n’y aurait pas encore plus d'interaction.
+```{r}
+modele_hierarchise <- lm(Amelioration ~ Molecule + Administration, data = dataMedicament)
+modele_hierarchise
+```
+
+```{r}
+anova(modele_hierarchise)
+```
+Ici, on voit deux p-value sont à nouveau très élevées. Donc on peut déjà en conclure qu’il n’y aura
+aucune influence … Mais nous allons le confirmer en analysant le summary.
+```{r}
+summary(modele_hierarchise)
+```
+Grace à ce summary, on ne constate aucune différence qu’avec l’anova au système croisé. Toutes les
+p-values sont plus élevées que le seuil « logique » qui est de 5%. Donc aucune des deux variables
+qualitatives influencent le coefficient d'immunité.  
+  
+D’ailleurs cela se confirme en regardant la p-value qui est très élevée et qui montre qu’il n’y aucune
+influence !  
+  
+# ACP et ACM  
+  
+## Eaux minérales  
+
+>Le fichier Eaux1.txt contient des données sur la teneur en divers éléments chimiques pour
+quelques eaux minérales commercialisées en France.
+  
+**Quelles relations peut-on détecter ?**
+  
+**Peut-on donner une signification claire aux axes principaux ?**
+```{r}
+library(FactoMineR)
+library(factoextra)
+
+remplaceNAparMOY<-function(x) 
+{ 
+  return ( ifelse(is.na(x), mean(x,na.rm = TRUE), x)  ) 
+} 
+```
+
+```{r}
+setwd("C:\\Users\\amine\\OneDrive\\Bureau\\EcomStat\\Labo\\Evaluation02\\datasets")
+
+donnees <- read.table("Eaux1.txt", sep="\t", header=TRUE, row.names=7)
+
+summary(donnees)
+```
+
+```{r}
+resultat_acp <- PCA(donnees)
+```
+
+```{r}
+resultat_acp$eig
+```
+
+```{r}
+plot(resultat_acp, choix="ind")
+```
+
+```{r}
+plot(resultat_acp, choix="var")
+```
+
+```{r}
+summary(resultat_acp)
+```
+
+```{r}
+
+```
+
+```{r}
+
+```
+
+```{r}
+
+```
+
+```{r}
+
+```
+
+```{r}
+
+```
+
+```{r}
+
+```
+
+```{r}
+
+```
+
+```{r}
+
+```
+
+```{r}
+
+```
+
+```{r}
+
+```
+
+```{r}
+
+```
+
+```{r}
+
+```
+
+```{r}
+
+```
+
+```{r}
+
+```
+
+```{r}
+
+```
