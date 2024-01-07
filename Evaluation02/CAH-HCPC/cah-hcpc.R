@@ -24,12 +24,8 @@ dataEauxCAH <- apply(dataEauxCAH, 2, remplaceNAparMOY)
 dataEauxCAH
 
 #CAH
-daisy(dataEauxCAH)
-
 classificationAverage <- agnes(scale(dataEauxCAH), method = "average")
-par(mfrow = c(2,1))
 plot(classificationAverage)
-
 classificationAverage.h <- as.hclust(classificationAverage)
 plot(rev(classificationAverage.h$height), type="h", ylab="hauteurs")
 
@@ -55,17 +51,9 @@ classification.acp <- PCA(dataEauxCAH)
 
 classification.hcpc <- HCPC(classification.acp, consol = F)
 
-classification.hcpc$data.clust
+classification.hcpc$desc.var$quanti.var
 
-classification.hcpc$desc.var
-
-classification.hcpc$desc.ind
-
-classification.hcpc$call$t$inert.gain
-
-barplot(classification.hcpc$call$t$inert.gain)
-
-classification.acp$eig
+classification.hcpc$desc.ind$para
 
 
 
@@ -76,28 +64,9 @@ dataVin <- read.table(file = "winedata.csv", header=TRUE, sep=";", row.names=1)
 summary(dataVin)
 
 #CAH
-daisy(dataVin)
-
 classification <- agnes(scale(dataVin), method = "ward")
 plot(classification)
 classification.h <- as.hclust(classification)
 plot(rev(classification.h$height), type="h", ylab="hauteurs")
 
 #rest a faire : la decoupe et order
-
-#HCPC
-classification.acp <- PCA(dataVin)
-
-classification.hcpc <- HCPC(classification.acp, consol = F)
-
-classification.hcpc$data.clust
-
-classification.hcpc$desc.var
-
-classification.hcpc$desc.ind
-
-classification.hcpc$call$t$inert.gain
-
-barplot(classification.hcpc$call$t$inert.gain)
-
-classification.acp$eig

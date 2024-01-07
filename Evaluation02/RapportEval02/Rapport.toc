@@ -8,3 +8,6 @@
 \contentsline {subsection}{\numberline {2.4}Le retour du Titanic (ACM)}{34}{subsection.2.4}%
 \contentsline {section}{\numberline {3}Les classifications : CAH et HCPC}{38}{section.3}%
 \contentsline {subsection}{\numberline {3.1}Histoire d'eaux (minérales)}{38}{subsection.3.1}%
+\contentsline {subsubsection}{\numberline {3.1.1}CAH}{39}{subsubsection.3.1.1}%
+\contentsline {subsubsection}{\numberline {3.1.2}HCPC}{53}{subsubsection.3.1.2}%
+\contentsline {subsection}{\numberline {3.2}Les vins italiens}{55}{subsection.3.2}%

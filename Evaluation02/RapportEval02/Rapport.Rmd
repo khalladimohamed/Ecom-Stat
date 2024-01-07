@@ -601,42 +601,166 @@ L'ACM indique des disparités potentielles dans le taux de survie basées sur la
 de diverses provenances (plates ou gazeuses) commercialisées en France en utilisant cette
 fois le fichier Eaux2010.txt.  
 
-**On demande de chercher à établir une classification de ces eaux minérales. On demande notamment de comparer les 4 méthodes classiques de regroupement. Une étude HCPC apporte-t-elle des informations complémentaires ?**
+**On demande de chercher à établir une classification de ces eaux minérales. On demande notamment de comparer les 4 méthodes classiques de regroupement. Une étude HCPC apporte-t-elle des informations complémentaires ?**   
+  
+### CAH
 
 ```{r}
+library(cluster)
 
+setwd("C:\\Users\\amine\\OneDrive\\Bureau\\EcomStat\\Labo\\Evaluation02\\datasets")
+
+dataEaux <- read.table("Eaux2010.txt", sep="\t", header=TRUE, row.names=7)
+
+summary(dataEaux)
 ```
 
 ```{r}
+dataEauxCAH <- dataEaux[, c("HCO3",	"SO4",	"Cl",	"Ca",	"Mg",	"Na")]
 
+remplaceNAparMOY<-function(x) 
+{ 
+  return ( ifelse(is.na(x), mean(x,na.rm = TRUE), x)  ) 
+}
+
+dataEauxCAH <- apply(dataEauxCAH, 2, remplaceNAparMOY)
+dataEauxCAH
+```
+Pour pouvoir effectuer notre comparaisons, nous allons utiliser la méthode Agnes qui permet de construire une
+hiérarchie arborescente. On va commencer avec la méthode « average », la méthode de la moyenne non
+pondérée.
+```{r}
+classificationAverage <- agnes(scale(dataEauxCAH), method = "average")
+plot(classificationAverage)
+classificationAverage.h <- as.hclust(classificationAverage)
+plot(rev(classificationAverage.h$height), type="h", ylab="hauteurs")
+```
+On obtient un très bon coefficient d’agglomération à 0,92 ce qui fait une partition déjà très
+discriminante. Cependant, on remarque quand même que plusieurs eaux se retrouvent seules très
+haut dans la répartition.  
+
+Pour essayer de réparer cela, on va executer la fonction agnes avec la méthode « ward » qui a pour but
+d’agréger en faisant perdre le moins d’inertie inter-classe en se basant sur un critère de
+regroupement en plus, le poids. En plus de la distance, la méthode se préoccupe du poids qui permet
+d’agréger de manière plus précises les classes entre elles.  
+  
+**Graphique des hauteurs des fusions des classes**  
+  
+L’objectif de ce graphique est de nous montrer la ou les hauteurs de coupe raisonnable pour une
+hiérarchisation. Pour être une bonne hauteur, il faut qu’il y ait une différence significative entre la
+hauteur x et sa hauteur x-1. Dans ce cadre-ci, la coupe à la hauteur 3 et 4 est faisable car il y a une
+réelle différence de hauteurs entre les deux barres. Les hauteurs 4 et 5 ne seraient pas 2 coupes assez
+signifiantes pour remarquer un changement, leurs hauteurs sont quasiment égales.
+```{r}
+classificationWard <- agnes(scale(dataEauxCAH), method = "ward")
+plot(classificationWard)
+classificationWard.h <- as.hclust(classificationWard)
+plot(rev(classificationWard.h$height), type="h", ylab="hauteurs")
+```
+On obtient un bien meilleur arbre, sans eaux qui se trouvent seules très hautes dans la hiérarchie et
+avec une classification plus précise également. De plus, on remarque que le coefficient
+d’agglomération est égal à 0,97 ce qui est mieux que celui de notre graphique précédent, ce qui
+prouve qu’il est encore meilleur.
+```{r}
+classificationSingle <- agnes(scale(dataEauxCAH), method = "single")
+plot(classificationSingle)
+classificationSingle.h <- as.hclust(classificationSingle)
+plot(rev(classificationSingle.h$height), type="h", ylab="hauteurs")
 ```
 
 ```{r}
-
+classificationComplete <- agnes(scale(dataEauxCAH), method = "complete")
+plot(classificationComplete)
+classificationComplete.h <- as.hclust(classificationComplete)
+plot(rev(classificationComplete.h$height), type="h", ylab="hauteurs")
 ```
 
 ```{r}
+#la decoupe et order
+```
+  
+    
+### HCPC
+  
+Maintenant nous allons effectuer une HCPC qui permet de faire une classification en se basant sur une analyse factorielle qui est, dans le cas présent, une ACP.
+```{r}
+classification.acp <- PCA(dataEauxCAH, graph = FALSE)
 
+classification.hcpc <- HCPC(classification.acp, consol = F, graph = FALSE)
+
+plot(classification.hcpc, choice = "tree")
+```
+Le programme nous a construit cette classification qui nous propose de couper pour avoir le nombre
+de clusters que l’on souhaite. Pour savoir comme découper ce cluster, on regarder le graphique situé
+en haut à droite qui nous permet de savoir quelle est la meilleure répartition ( moins de perte inter
+classe ) et à partir de quand cela devient inutile de découper en plus de clusters. Dans notre cas de
+figure, on voit qu’après 3, on se rend compte que cela devient très dur de découper.  
+  
+Après avoir découpé au bon endroit, on obtient ce graphique :
+```{r}
+#image avec les clusters apres la decoupe
+```
+  
+    
+Maintenant, il est temps de chercher quels sont les variables qui différencient ces 3 groupes.
+Pour cela, on utiliser cette fonction :
+```{r}
+classification.hcpc$desc.var$quanti.var
+```
+On obtient des p-values qui nous permettent d’établir un rapport de corrélation ( c’est comme si on faisait une anova à un facteur ) . Cela nous permet donc de définir la ou les variables qui expliquent le mieux la différence entre les différents clusters.  
+  
+On peut également obtenir le parangon de chaque classe (c’est-à-dire l’individu le plus proche du
+centre de gravité de chaque cluster). Cela nous permet d’avoir le meilleur individu potentiel pour
+pouvoir comparer les différences entre individus de chaque classe. Pour cela, on doit faire cette
+méthode :
+```{r}
+classification.hcpc$desc.ind$para
+```
+  
+    
+      
+## Les vins italiens  
+  
+>Une étude internationale porte sur des vins italiens afin de déterminer si les classifications
+établies par les viticulteurs reposent sur des données objectives ou relèvent plutôt de
+traditions et autres arguments subjectifs. Cette étude dit essentiellement :    
+
+These data are the results of a chemical analysis of wines grown in the same region in
+Italy but derived from three different cultivars. The analysis determined the quantities of 13
+constituents found in each of the three types of wines.  
+The attributes are  
+1) Alcohol  
+2) Malic acid  
+3) Ash  
+4) Alcalinity of ash  
+5) Magnesium  
+6) Total phenols  
+7) Flavanoids  
+8) Nonflavanoid phenols  
+9) Proanthocyanins  
+10)Color intensity  
+11)Hue  
+12)OD280/OD315 of diluted wines  
+13)Proline"  
+  
+**Le fichier "winedata.csv" contient ces données. On demande une étude des classifications envisageables pour ces vins.**
+```{r}
+setwd("C:\\Users\\amine\\OneDrive\\Bureau\\EcomStat\\Labo\\Evaluation02\\datasets")
+
+dataVin <- read.table(file = "winedata.csv", header=TRUE, sep=";", row.names=1)
+
+summary(dataVin)
 ```
 
 ```{r}
-
+classification <- agnes(scale(dataVin), method = "ward")
+plot(classification)
+classification.h <- as.hclust(classification)
+plot(rev(classification.h$height), type="h", ylab="hauteurs")
 ```
 
 ```{r}
-
-```
-
-```{r}
-
-```
-
-```{r}
-
-```
-
-```{r}
-
+#la decoupe et order
 ```
 
 ```{r}
