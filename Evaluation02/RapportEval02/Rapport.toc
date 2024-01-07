@@ -2,4 +2,9 @@
 \contentsline {subsection}{\numberline {1.1}Bière et petits maux}{3}{subsection.1.1}%
 \contentsline {subsection}{\numberline {1.2}Les médicaments contre la GCE}{10}{subsection.1.2}%
 \contentsline {section}{\numberline {2}ACP et ACM}{16}{section.2}%
-\contentsline {subsection}{\numberline {2.1}Eaux minérales}{16}{subsection.2.1}%
+\contentsline {subsection}{\numberline {2.1}Eaux minérales (ACP)}{16}{subsection.2.1}%
+\contentsline {subsection}{\numberline {2.2}Etude de maïs (ACP)}{20}{subsection.2.2}%
+\contentsline {subsection}{\numberline {2.3}Etude de maïs (ACM)}{29}{subsection.2.3}%
+\contentsline {subsection}{\numberline {2.4}Le retour du Titanic (ACM)}{34}{subsection.2.4}%
+\contentsline {section}{\numberline {3}Les classifications : CAH et HCPC}{38}{section.3}%
+\contentsline {subsection}{\numberline {3.1}Histoire d'eaux (minérales)}{38}{subsection.3.1}%

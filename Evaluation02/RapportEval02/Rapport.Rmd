@@ -227,7 +227,7 @@ modele_hierarchise
 ```{r}
 anova(modele_hierarchise)
 ```
-Ici, on voit deux p-value sont à nouveau très élevées. Donc on peut déjà en conclure qu’il n’y aura
+Ici, on voit que les deux p-value sont à nouveau très élevées. Donc on peut déjà en conclure qu’il n’y aura
 aucune influence … Mais nous allons le confirmer en analysant le summary.
 ```{r}
 summary(modele_hierarchise)
@@ -236,19 +236,22 @@ Grace à ce summary, on ne constate aucune différence qu’avec l’anova au sy
 p-values sont plus élevées que le seuil « logique » qui est de 5%. Donc aucune des deux variables
 qualitatives influencent le coefficient d'immunité.  
   
-D’ailleurs cela se confirme en regardant la p-value qui est très élevée et qui montre qu’il n’y aucune
+D’ailleurs cela se confirme en regardant la p-value du modele qui est très élevée et qui montre qu’il n’y aucune
 influence !  
   
 # ACP et ACM  
   
-## Eaux minérales  
+## Eaux minérales (ACP) 
 
 >Le fichier Eaux1.txt contient des données sur la teneur en divers éléments chimiques pour
 quelques eaux minérales commercialisées en France.
   
 **Quelles relations peut-on détecter ?**
   
-**Peut-on donner une signification claire aux axes principaux ?**
+**Peut-on donner une signification claire aux axes principaux ?**  
+  
+Pour pourvoir réaliser nos ACP, il faut inclure la librairie FactoMineR.  
+Nous allons aussi inclure la librairie FactoExtra afin d’obtenir des graphiques plus présentables.
 ```{r}
 library(FactoMineR)
 library(factoextra)
@@ -258,7 +261,7 @@ remplaceNAparMOY<-function(x)
   return ( ifelse(is.na(x), mean(x,na.rm = TRUE), x)  ) 
 } 
 ```
-
+Tout d’abord, on lit le fichier dans le but d’avoir un data set correctement formé.
 ```{r}
 setwd("C:\\Users\\amine\\OneDrive\\Bureau\\EcomStat\\Labo\\Evaluation02\\datasets")
 
@@ -266,42 +269,339 @@ donnees <- read.table("Eaux1.txt", sep="\t", header=TRUE, row.names=7)
 
 summary(donnees)
 ```
-
+On peut dès maintenant effectuer la fonction PCA sur le data set formé qui va nous donner ce qu’il
+nous faut et on va pouvoir analyser sur base de ces résultats.
 ```{r}
-resultat_acp <- PCA(donnees)
+resultat_acp <- PCA(donnees, graph = FALSE)
 ```
-
+Ensuite, on va pouvoir analyser les différentes valeurs propres afin de voir quels sont les axes qui
+conservent le maximum d’Inertie.
 ```{r}
 resultat_acp$eig
 ```
-
-```{r}
-plot(resultat_acp, choix="ind")
-```
-
+Les deux premiers axes, seraient suffisants pour notre etude puisque ils expliquant presque 80% de l'inertie.
 ```{r}
 plot(resultat_acp, choix="var")
 ```
+**Graphique des Variables**  
+  
+*Axe de la première composante principale (Dim 1)* : Il explique 51,57% de la variance. Cet axe est dominé par des variables telles que Ca, HCO3, Mg, et SO4. Ces variables sont fortement corrélées avec la première composante principale, ce qui signifie que cette composante pourrait être interprétée comme un facteur lié à la "minéralité" de l'eau, car ces éléments sont des indicateurs classiques de ce caractéristique dans l'eau.  
+
+  
+*Axe de la deuxième composante principale (Dim 2)* : Il explique 28,13% de la variance. Sur cet axe, Na et Cl sont les plus éloignés de l'origine, suggérant qu'ils contribuent significativement à cette composante. Cette composante pourrait être liée à la "salinité" de l'eau, étant donné que le sodium (Na) et le chlore (Cl) sont des composants majeurs du sel.  
+  
+Les angles entre les vecteurs indiquent le niveau de corrélation entre les variables. Par exemple, Ca et Mg sont assez proches, indiquant une corrélation positive. En revanche, Cl et SO4 sont presque perpendiculaires, suggérant peu ou pas de corrélation directe entre eux.
+```{r}
+plot(resultat_acp, choix="ind")
+```
+**Graphique des Individus**  
+  
+*Axe de la première composante principale (Dim 1)* : Les eaux situées à droite sur l'axe (avec des valeurs positives) sont probablement plus riches en Ca, HCO3, Mg, et SO4, tandis que celles à gauche sont moins riches en ces minéraux.  
+  
+*Axe de la deuxième composante principale (Dim 2)* : Les eaux en haut du graphique (avec des valeurs positives sur Dim 2) sont probablement plus riches en Na et Cl, indiquant une teneur plus élevée en sel.  
+  
+Les positions relatives des eaux minérales peuvent suggérer des similitudes ou des différences dans leur composition chimique. Par exemple, "Oge" est distinctement différent des autres eaux minérales, suggérant une composition chimique unique par rapport aux autres échantillons.
+```{r}
+dimdesc(resultat_acp)
+```
+
+## Etude de maïs (ACP)  
+
+>e ministère de l'Agriculture du Malabarland a commandité une étude sur les plants de maïs
+afin d'optimiser les techniques de culture. Un échantillon de 100 pieds de maïs a été
+constitué (sur 50000 pieds possibles) et les résultats ont été compilés dans le fichier etude-
+agro-mais.csv.  
+  
+>Certaines variables s'interprètent par leur nom et pour les autres :  
+Masse: masse de l'ensemble des grains du plant  
+Germination.epi: le grain est-il germé sur épi ?  
+Verse: le pied est-il penché ou tombé ?  
+Attaque: attaqué par des insectes ?  
+Hauteur.J7: hauteur 7 jours après la récolte  
+Verse.Traitement: verse après traitement ?  
+Nb.jours.attaque: nombre de jours entre la pousse jusqu'à l'attaque    
+Censure.droite: non utilisée dans la suite  
+  
+**Le Ministère commandite une étude globale d'exploration des données (il ne le sait pas vu sa formation, mais ceci implique donc une ACM et une ACP de l'ensemble des données). Que peut-on observer ?**  
+  
+Tout d’abord, nous lisons notre fichier dans le but d’avoir un data Set correctement formé.  
+Ensuite, nous faisons un summary pour nous assurer que R interprète correctement le mode des
+colonnes.
+```{r}
+setwd("C:\\Users\\amine\\OneDrive\\Bureau\\EcomStat\\Labo\\Evaluation02\\datasets")
+
+dataMais <- read.table(file = "etude-agro-mais.csv", header=TRUE, sep=";", row.names=1)
+
+summary(dataMais)
+```
+La censure étant une donnée non utilisée dans la suite, il est préférable de l’enlever pour ne pas avoir
+des données qui peuvent les fausser.
+```{r}
+dataMais$Censure.droite <- as.factor(dataMais$Censure.droite)
+```
+Etant donné que nous réalisons une ACP, il faut retirer du data-set, toutes les valeurs qualitatives car
+une ACP s’effectue entre variables quantitatives.
+```{r}
+dataMais <- dataMais[which(sapply(dataMais, is.numeric))]
+
+summary(dataMais)
+```
+Malheureusement, certains individus ne disposent pas de données sur certaines variables. C’est
+pourquoi, afin d’avoir une représentation la plus fidèle de la réalité, nous allons changer ces valeurs
+inconnues par la moyenne de la colonne grâce à une fonction fournie :
+```{r}
+remplaceNAparMOY<-function(x) 
+{ 
+  return ( ifelse(is.na(x), mean(x,na.rm = TRUE), x)  ) 
+} 
+```
+Voici l’exécution de la fonction :
+```{r}
+dataMais <- apply(dataMais, 2, remplaceNAparMOY)
+dataMais
+```
+Nous pouvons dès maintenant effectuer la fonction PCA sur notre nouveau data-set :
+```{r}
+resultat_acp_mais <- PCA(dataMais, graph = FALSE)
+```
+Affichons les valeurs propres afin de savoir si nos axes conservent le maximum d’Inertie.
+```{r}
+resultat_acp_mais$eig
+```
+Les 2 premiers axes permettent d’expliquer 80% de l’Inertie, ce qui est vraiment très important ! C’est
+pour cela que l’étude va se porter uniquement sur ces deux axes.  
+  
+Avant d’afficher les graphiques, il est peut-être plus prudent de voir les corrélations entre les individus
+et les axes, de même pour les variables (c’est-à-dire les colonnes).
+```{r}
+resultat_acp_mais$var$cos2
+```
+Nous constatons que les variables des Hauteurs (Hauteur et Hauteur.J7 ) et de la Masse ont une très
+forte corrélation entre elles sur la Dimension 1.  
+Dans la 2ème dimension, il s’agît du nombre de grains (Nb.grains) ainsi que leurs
+masses (Masse.grains) qui ont une bonne corrélation.  
+  
+A présent regardons le cos^2 des individus afin de voir la corrélation de chaque individu par rapport
+aux dimensions.
+```{r}
+resultat_acp_mais$ind$cos2
+```
+Nous pouvons observer que les individus 4, 72, 82 ont une très forte corrélation avec la dimension 1.  
+Alors que 74, 73 ont une très forte corrélation avec la dimension 2.  
+  
+Maintenant, il est peut-être intéressant de regarder la contribution des variables.
+```{r}
+resultat_acp_mais$var$contrib
+```
+Nous constatons que la masse et les hauteurs ont les plus grandes contributions pour l’axe des x alors
+que pour l’axe y, c’est le nombre de grains et la masse des grains.  
+  
+Jusqu’à maintenant, nous avons regardé les cos^2 des individus et des variables et nous pouvons en
+déduire que l’axe 1 pourrait représenter la masse par rapport à la hauteur. L’axe 2 serait le nombre de
+grains par rapport à la masse des grains. C’est ce que l’on va chercher à prouver en analysant les
+graphiques.
+```{r}
+plot(resultat_acp_mais, choix="var")
+```
+**Interprétation du Graphique des Variables**  
+  
+Le graphique des variables montre les relations entre les variables quantitatives de l'étude sur les plants de maïs. Les axes Dim 1 et Dim 2 montrent les deux premières composantes principales qui expliquent la plus grande part de la variance dans l'ensemble des données.  
+  
+Observations :  
+  
+Nous voyons 2 groupes de projections, le premier est constitué de la masse et des hauteurs. Il tend
+vers l’axe des X et qui se projette très bien sur l’axe des abscisses.  
+  
+Le second est constitué de la masse et de la hauteur des grains se projette plutôt bien sur l’axe des
+ordonnées (la dimension 2).  
+  
+La variable Nb.jours.attaque ne va pas être étudiée ici car elle se trouve trop proche du centre du
+graphique. Elle ne donnerait aucun résultat intéressant sur les 2 axes d’études.
+```{r}
+plot(resultat_acp_mais, choix="ind")
+```
+**Interprétation du Graphique des Individus**  
+  
+Le graphique des individus montre la distribution des 100 pieds de maïs étudiés dans le plan des deux premières composantes principales.  
+  
+Observations :  
+  
+Lorsqu’on se focalise sur l’axe des X, on remarque que les individus 4,72,82 (que l’on a mis en évidence
+en début de réflexion) ont une très bonne projection sur la dimension 1.
+
+**Conclusion**  
+Grâce aux analyses des graphiques, nous pouvons conclure que la dimension 1 est la
+représentation de la masse par rapport aux différentes hauteurs. La dimension 2 représente la masse
+des grains par rapport au nombre de grains.
+```{r}
+dimdesc(resultat_acp_mais)
+```
+
+## Etude de maïs (ACM) 
 
 ```{r}
-summary(resultat_acp)
+setwd("C:\\Users\\amine\\OneDrive\\Bureau\\EcomStat\\Labo\\Evaluation02\\datasets")
+
+dataMais <- read.table(file = "etude-agro-mais.csv", header=TRUE, sep=";", row.names=1)
+
+summary(dataMais)
+```
+Etant donné que nous réalisons une ACM, il faut retirer du data-set, toutes les valeurs quantitatives car
+une ACM s’effectue entre variables qualitatives.
+```{r}
+dataMaisACM <- dataMais[, c("Couleur", "Germination.epi", "Enracinement", 
+                          "Verse", "Attaque", "Parcelle", "Verse.Traitement")]
+
+summary(dataMaisACM)
+```
+Puis on va enlever les NA.
+```{r}
+dataMaisACM <- na.omit(dataMaisACM)
+```
+Nos données sont bien des valeurs interprétées comme étant qualitatives et nous pouvons donc
+procéder à l’ACM.
+```{r}
+resultat_acm <- MCA(dataMaisACM, graph = FALSE)
 ```
 
 ```{r}
-
+resultat_acm$eig
+```
+Le faible pourcentage correspondant à chaque dimension est faible : mais dans ACM on travaille dans des espaces avec un nombre important de dimensions, puisqu'elles correspondent à toutes les modalités des différentes variables qualitatives.
+```{r}
+resultat_acm$var$cos2[,1:2]
 ```
 
 ```{r}
+plot(resultat_acm, choix="var")
+```
+Ce graphique représente la corrélation entre les différentes variables et les dimensions principales
+étudiées. Il faut mettre en évidence que ces 2 dimensions ne regroupent qu’approximativement 35%
+de l’Inertie totale. Les conclusions que l’on va faire sur ces données sont donc à prendre avec des
+pincettes.  
+On remarque tout de même que la variables Verse est la mieux projetée sur la
+première dimension. Pour la seconde dimension, on peut dire que la Parcelle est pas mal
+projetée.  
+  
+Nous allons vérifier cela avec d’autres graphiques qui nous donneront plus d’informations visuelles
+sur l’analyse de ces données.
 
+```{r}
+fviz_mca_var(resultat_acm)
+```
+**Graphique des Catégories de Variables**  
+Ce graphique montre la projection des catégories des variables qualitatives sur les deux premières dimensions de l'ACM.  
+  
+Observations :  
+  
+Dim 1 (21.5% de la variance) : Cette dimension oppose les catégories relatives à la germination sur épi (Germination.epi_Non), à la présence d'attaque d'insectes (Attaque_Non), et à la non-inclinaison du plant (Verse_Non) d'un côté, aux catégories telles que Verse_Oui (plant incliné ou tombé) et Verse.Traitement_Oui (inclinaison après traitement) de l'autre côté. Cela suggère que cette dimension pourrait être associée à la robustesse et à la santé des plants de maïs.  
+  
+Dim 2 (14.73% de la variance) : Cette dimension semble séparer les couleurs des plants (Jaune, Rouge), avec Jaune.rouge proche de l'origine, suggérant que cette catégorie peut être moins distincte ou moins informative.
+```{r}
+fviz_mca_ind(resultat_acm)
+```
+Graphique des Individus  
+Le deuxième graphique montre la projection des 100 pieds de maïs sur les mêmes dimensions.  
+  
+Observations :  
+  
+Les points sont dispersés le long des deux axes, indiquant la variabilité dans les caractéristiques qualitatives des plants de maïs. Les individus à droite ou à gauche sur l'axe de Dim 1 peuvent être différenciés par leur santé et ceux plus haut ou plus bas sur Dim 2 pourraient être différenciés par la couleur de leur plant.
+
+
+## Le retour du Titanic (ACM)  
+  
+>Un historien a réalisé une étude des données en rapport avec le naufrage du Titanic. Les
+résultats sont dans le fichier de données titanic.csv.  
+**Que peut-on en déduire ?**  
+  
+>La colonne 1 est l'identificateur des personnes.  
+La colonne 2 correspond à la classe de cabine, selon les codes  
+0 = équipage, 1 = première classe, 2 = seconde classe, 3 = troisième classe.  
+La colonne 3 est la catégorie d'age : 0 = enfant, 1 = adulte.  
+La colonne 4 est le sexe de la personne : 0 = femme, 1 = homme.  
+La colonne 5 indique si la personne a survécu : 0 = non, 1 = oui.
+
+```{r}
+setwd("C:\\Users\\amine\\OneDrive\\Bureau\\EcomStat\\Labo\\Evaluation02\\datasets")
+
+dataTitanic <- read.table(file = "titanic.csv", header=TRUE, sep=";", row.names=1)
+
+summary(dataTitanic)
+```
+Etant donné que nous réalisons une ACM, il faut tronsformer toutes les valeurs quantitatives en valeurs qualitatives car
+une ACM s’effectue entre variables qualitatives.
+```{r}
+dataTitanic$CLASS <- factor(dataTitanic$CLASS, levels = c(0, 1, 2, 3), labels = 
+                     c("Equipage", "Premiere Classe", "Seconde Classe", "Troisieme Classe"))
+dataTitanic$AGE <- factor(dataTitanic$AGE, levels = c(0, 1), labels = c("Enfant", "Adulte"))
+dataTitanic$SEX <- factor(dataTitanic$SEX, levels = c(0, 1), labels = c("Femme", "Homme"))
+dataTitanic$SURV <- factor(dataTitanic$SURV, levels = c(0, 1), labels = c("Non", "Oui"))
+
+summary(dataTitanic)
+```
+Nos données sont bien des valeurs interprétées comme étant qualitatives et nous pouvons donc
+procéder à l’ACM.
+```{r}
+resultat_acm <- MCA(dataTitanic, graph = FALSE)
 ```
 
 ```{r}
-
+resultat_acm$eig
 ```
 
 ```{r}
-
+resultat_acm$var$cos2[,1:2]
 ```
+
+```{r}
+plot(resultat_acm, choix="var")
+```
+Ce graphique représente la corrélation entre les différentes variables et les dimensions principales étudiées.  
+
+On remarque tout de même que les variables de la SURV et du SEX sont les mieux projetées sur la
+première dimension. Pour la seconde dimension, on peut dire que AGE et CLASS sont pas mal
+projetées également.  
+
+Nous allons vérifier cela avec d’autres graphiques qui nous donneront plus d’informations visuelles
+sur l’analyse de ces données.
+```{r}
+fviz_mca_var(resultat_acm)
+```
+**Graphique des Catégories de Variables**  
+Ce graphique représente les différentes catégories pour chaque variable étudiée.  
+  
+Observations :  
+  
+Dim 1 (29.7% de la variance) : Cette dimension semble opposer les membres de l'équipage (Equipage) et les passagers en troisième classe (Troisieme Classe) à ceux en première (Premiere Classe) et seconde classe (Seconde Classe). Cela pourrait refléter la différence socio-économique entre les passagers et l'équipage du Titanic.  
+  
+Dim 2 (20.3% de la variance) : Cette dimension sépare les enfants (Enfant) des adultes (Adulte), et peut-être les hommes des femmes, bien que ces derniers ne soient pas aussi clairement opposés sur cette dimension. Cela peut indiquer des différences dans les taux de survie en fonction de l'âge et du sexe.
+```{r}
+fviz_mca_ind(resultat_acm)
+```
+**Graphique des Individus**  
+Ce graphique montre la projection des individus (les passagers et membres de l'équipage) sur les mêmes dimensions.  
+  
+Observations :  
+  
+Les individus sont dispersés le long des deux dimensions, ce qui suggère une variation dans les caractéristiques et les taux de survie des personnes à bord du Titanic.  
+  
+Certains points, sont proches des catégories Premiere Classe et Seconde Classe sur la première dimension, ce qui peut indiquer qu'ils appartenaient à ces classes et avaient potentiellement un taux de survie plus élevé.  
+  
+**Conclusion**  
+  
+L'ACM indique des disparités potentielles dans le taux de survie basées sur la classe socio-économique (première, seconde et troisième classe, ou membre de l'équipage), l'âge (enfant ou adulte) et le sexe (homme ou femme). Historiquement, nous savons que les femmes et les enfants ont eu la priorité pour les canots de sauvetage et que les passagers des classes supérieures avaient un meilleur accès aux ressources de survie. Ces graphiques semblent refléter ces faits historiques.  
+  
+  
+
+# Les classifications : CAH et HCPC  
+  
+## Histoire d'eaux (minérales)  
+  
+>On revient sur des données sur la teneur en divers éléments chimiques des eaux minérales
+de diverses provenances (plates ou gazeuses) commercialisées en France en utilisant cette
+fois le fichier Eaux2010.txt.  
+
+**On demande de chercher à établir une classification de ces eaux minérales. On demande notamment de comparer les 4 méthodes classiques de regroupement. Une étude HCPC apporte-t-elle des informations complémentaires ?**
 
 ```{r}
 

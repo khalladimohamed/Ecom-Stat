@@ -17,7 +17,7 @@ donnees <- read.table("Eaux1.txt", sep="\t", header=TRUE, row.names=7)
 
 summary(donnees)
 
-resultat_acp <- PCA(donnees)
+resultat_acp <- PCA(donnees, graph = FALSE)
 
 resultat_acp$eig
 
@@ -25,7 +25,7 @@ plot(resultat_acp, choix="ind")
 
 plot(resultat_acp, choix="var")
 
-summary(resultat_acp)
+dimdesc(resultat_acp)
 
 
 
@@ -46,7 +46,7 @@ summary(dataMais)
 dataMais <- apply(dataMais, 2, remplaceNAparMOY)
 dataMais
 
-resultat_acp_mais <- PCA(dataMais)
+resultat_acp_mais <- PCA(dataMais, graph = FALSE)
 
 resultat_acp_mais$eig
 
@@ -60,7 +60,7 @@ plot(resultat_acp_mais, choix="ind")
 
 plot(resultat_acp_mais, choix="var")
 
-summary(resultat_acp_mais)
+dimdesc(resultat_acp_mais)
 
 
 #ACM
@@ -74,16 +74,11 @@ summary(dataMaisACM)
 
 dataMaisACM <- na.omit(dataMaisACM)
 
-td <- tab.disjonctif(dataMaisACM)
-td
-
-resultat_acm <- MCA(dataMaisACM)
+resultat_acm <- MCA(dataMaisACM, graph = FALSE)
 
 resultat_acm$eig
 
 resultat_acm$var$cos2[,1:2]
-
-plot(resultat_acm, choix="ind")
 
 plot(resultat_acm, choix="var")
 
@@ -106,16 +101,11 @@ dataTitanic$SURV <- factor(dataTitanic$SURV, levels = c(0, 1), labels = c("Non",
 
 summary(dataTitanic)
 
-td <- tab.disjonctif(dataTitanic)
-td
-
-resultat_acm <- MCA(dataTitanic)
+resultat_acm <- MCA(dataTitanic, graph = FALSE)
 
 resultat_acm$eig
 
 resultat_acm$var$cos2[,1:2]
-
-plot(resultat_acm, choix="ind")
 
 plot(resultat_acm, choix="var")
 
