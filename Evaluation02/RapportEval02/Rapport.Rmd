@@ -79,7 +79,7 @@ H0: Il n'y a pas de différence dans les moyennes du coefficient biochimique ent
 H1: Il existe au moins une différence dans les moyennes du coefficient biochimique entre les différents types de "maux".  
   
  
-**Effets principaux du facteur "biere":** 
+**Effets principaux du facteur "biere":**  
 H0: Il n'y a pas de différence dans les moyennes du coefficient biochimique entre les différentes bières.  
 H1: Il existe au moins une différence dans les moyennes du coefficient biochimique entre les différentes bières.  
   
@@ -90,7 +90,7 @@ H1: Il existe une interaction entre les "maux" et les "bières", c'est-à-dire q
 ```{r}
 anova(modele_croise)
 ```
-**Pour les effets principaux du facteur "maux":** 
+**Pour les effets principaux du facteur "maux":**   
 Pour un seuil de 1% ou 5% on rejette H0, donc :  
 H1: Il existe au moins une différence dans les moyennes du coefficient biochimique entre les différents types de "maux".  
   
@@ -190,7 +190,7 @@ H0: Il n'y a pas de différence dans les moyennes du coefficient d'immunité ent
 H1: Il existe au moins une différence dans les moyennes du coefficient d'immunité entre les différents types de "Molecule".  
   
  
-**Effets principaux du facteur "Administration":** 
+**Effets principaux du facteur "Administration":**   
 H0: Il n'y a pas de différence dans les moyennes du coefficient d'immunité entre les différentes types d'administrations.  
 H1: Il existe au moins une différence dans les moyennes du coefficient d'immunité entre les différentes types d'administrations.  
   
@@ -676,7 +676,15 @@ plot(rev(classificationComplete.h$height), type="h", ylab="hauteurs")
 ```
 
 ```{r}
-#la decoupe et order
+#Decoupage en 3 parties
+classes <- cutree(classificationWard, k = 3)
+
+nomEaux <- rownames(dataEauxCAH)
+
+results3 <- cbind(nomEaux, classes)
+
+results3<-results3[order(results3[,2]), ]
+results3
 ```
   
     
@@ -690,18 +698,20 @@ classification.hcpc <- HCPC(classification.acp, consol = F, graph = FALSE)
 
 plot(classification.hcpc, choice = "tree")
 ```
+
 Le programme nous a construit cette classification qui nous propose de couper pour avoir le nombre
 de clusters que l’on souhaite. Pour savoir comme découper ce cluster, on regarder le graphique situé
 en haut à droite qui nous permet de savoir quelle est la meilleure répartition ( moins de perte inter
 classe ) et à partir de quand cela devient inutile de découper en plus de clusters. Dans notre cas de
 figure, on voit qu’après 3, on se rend compte que cela devient très dur de découper.  
   
-Après avoir découpé au bon endroit, on obtient ce graphique :
-```{r}
-#image avec les clusters apres la decoupe
-```
+Après avoir découpé au bon endroit, on obtient ce graphique :  
+![image avec les clusters apres la decoupe](C:\Users\amine\OneDrive\Bureau\EcomStat\Labo\Evaluation02\datasets\clusters.png)
+
+Avec ce graphique, on peut voir que R nous a fourni 3 clusters d’individus. On remarque bien que lee 3
+cluster sont complètement à l’écart les un des autres! Ce qui fait que nous avons réellement 3 clusters et 3
+groupes.  
   
-    
 Maintenant, il est temps de chercher quels sont les variables qui différencient ces 3 groupes.
 Pour cela, on utiliser cette fonction :
 ```{r}
@@ -760,7 +770,15 @@ plot(rev(classification.h$height), type="h", ylab="hauteurs")
 ```
 
 ```{r}
-#la decoupe et order
+#Decoupage en 3 parties
+classes <- cutree(classification, k = 3)
+
+idVins <- rownames(dataVin)
+
+results3 <- cbind(idVins, classes)
+
+results3<-results3[order(results3[,2]), ]
+results3
 ```
 
 ```{r}

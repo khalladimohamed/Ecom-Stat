@@ -44,7 +44,15 @@ plot(classificationComplete)
 classificationComplete.h <- as.hclust(classificationComplete)
 plot(rev(classificationComplete.h$height), type="h", ylab="hauteurs")
 
-#rest a faire : la decoupe et order
+#Decoupage en 3 parties
+classes <- cutree(classificationWard, k = 3)
+
+nomEaux <- rownames(dataEauxCAH)
+
+results3 <- cbind(nomEaux, classes)
+
+results3<-results3[order(results3[,2]), ]
+results3
 
 #HCPC
 classification.acp <- PCA(dataEauxCAH)
@@ -69,4 +77,12 @@ plot(classification)
 classification.h <- as.hclust(classification)
 plot(rev(classification.h$height), type="h", ylab="hauteurs")
 
-#rest a faire : la decoupe et order
+#Decoupage en 3 parties
+classes <- cutree(classification, k = 3)
+
+idVins <- rownames(dataVin)
+
+results3 <- cbind(idVins, classes)
+
+results3<-results3[order(results3[,2]), ]
+results3
